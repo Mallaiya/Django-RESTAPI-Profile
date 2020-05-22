@@ -14,7 +14,7 @@ class UserManager(BaseUserManager):
         user = self.model(email=email, name=name, dob=dob)
 
         user.set_password(password)
-        user.save()
+        user.save(using=self._db)
 
         return user
 
@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
 
         user.is_superuser = True
         user.is_staff = True
-        user.save()
+        user.save(using=self._db)
 
         return user
 
@@ -38,7 +38,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     
-    object = UserManager()
+    objects = UserManager()
     
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['name', 'dob']

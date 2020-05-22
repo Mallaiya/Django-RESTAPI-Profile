@@ -2,12 +2,15 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
+from rest_framework import filters
 
-from profiles_api import serializers
+from profiles_api import serializers, models, permissions
 
 
 class TestAPIView(APIView):
-    serializer_data = serializers.TestSerializer
+    
+    serializer_class = serializers.TestSerializer
 
     def get(self, request, format=None):
         data = [
@@ -22,11 +25,11 @@ class TestAPIView(APIView):
         ]
         return Response({'message': 'Successfully got data', 'data': data})
 
-
     def post(self, request):
-        serializer = self.serializer_data(data=request.data)
-
-        if(serializer.is_valid()):
+        
+        serializer = self.serializer_class(data=request.data)
+        
+        if(serializer.is_valid()): 
             name = serializer.validated_data.get('name')
             message = f'Hello {name}'
 
@@ -35,7 +38,7 @@ class TestAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk=None):
-        serializer = self.serializer_data(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if (serializer.is_valid()):
             name = serializer.validated_data.get('name')
@@ -47,7 +50,7 @@ class TestAPIView(APIView):
 
 
     def patch(self, request, pk=None):
-        serializer = self.serializer_data(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if (serializer.is_valid()):
             name = serializer.validated_data.get('name')
@@ -62,13 +65,13 @@ class TestAPIView(APIView):
 
 
 class TestViewSet(viewsets.ViewSet):
-    serializer_data = serializers.TestSerializer
+    serializer_class = serializers.TestSerializer
 
     def list(self, request):
         return Response({'message': 'Data fetched successfully form view sets', 'data': [1,2,3,4]})
 
     def create(self, request):
-        serializer = self.serializer_data(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             name = serializer.validated_data.get('name')
@@ -91,7 +94,7 @@ class TestViewSet(viewsets.ViewSet):
         return Response({'message': 'Successfully got data', 'data': data})
 
     def update(self, request, pk=None):
-        serializer = self.serializer_data(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if (serializer.is_valid()):
             name = serializer.validated_data.get('name')
@@ -102,7 +105,7 @@ class TestViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def partial_update(self, request, pk=None):
-        serializer = self.serializer_data(data=request.data)
+        serializer = self.serializer_class(data=request.data)
 
         if (serializer.is_valid()):
             name = serializer.validated_data.get('name')
@@ -114,4 +117,20 @@ class TestViewSet(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         return Response({'message': 'Deleted Successfully'})
+
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    serializer_class = serializers.UserSerializer
+    queryset = models.User.objects.all()
+
+    # def list(self, request):
+    #     return Response({'message': 'Data fetched successfully form view sets', 'data': })
+
+    # print("---------------------", queryset)
+    authentication_classes = (TokenAuthentication, )
+    permission_classes = (permissions.UserPermission, ) 
+    filter_backends = (filters.SearchFilter, )
+    search_fields = ('name', 'dob', 'email')
+
 
